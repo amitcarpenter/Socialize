@@ -19,7 +19,47 @@ const registerUser = async (fullName, email, password) => {
     }
 };
 
+const authenticateUser = async (email, password) => {
+    const queryText = 'SELECT * FROM users WHERE email = $1 AND password = $2';
+    const values = [email, password];
 
+    try {
+        const result = await pool.query(queryText, values);
+        return result.rows[0];
+    } catch (err) {
+        throw err;
+    }
+};
+
+
+const saveContactMessage = async (fullName, email, subject, message) => {
+    const queryText = 'INSERT INTO contact_messages (full_name, email, subject, message) VALUES ($1, $2, $3, $4) RETURNING *';
+    const values = [fullName, email, subject, message];
+
+    try {
+        const result = await pool.query(queryText, values);
+        return result.rows[0];
+    } catch (err) {
+        throw err;
+    }
+};
+
+const updatePassword = async (email, currentPassword, newPassword) => {
+    const queryText = 'UPDATE users SET password = $1 WHERE email = $2 AND password = $3 RETURNING *';
+    const values = [newPassword, email, currentPassword];
+
+    try {
+        const result = await pool.query(queryText, values);
+
+        if (result.rows.length === 0) {
+            return null;
+        }
+
+        return result.rows[0];
+    } catch (err) {
+        throw err;
+    }
+};
 
 // Register endpoint
 const register_user = async (req, res) => {
@@ -39,5 +79,59 @@ const register_user = async (req, res) => {
     }
 };
 
+// Login EndPoint
+const login_user = async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const user = await authenticateUser(email, password);
 
-module.exports = { register_user, registerUser }
+        if (user) {
+            res.status(200).json({ message: 'Login successful', user });
+        } else {
+            res.status(401).json({ error: 'Invalid credentials' });
+        }
+    } catch (err) {
+        console.error('Error authenticating user:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+// Contact Us
+const contact_us = async (req, res) => {
+    const { fullName, email, subject, message } = req.body;
+
+    try {
+        const savedMessage = await saveContactMessage(fullName, email, subject, message);
+
+        res.status(201).json({ message: 'Contact message saved successfully', savedMessage });
+    } catch (err) {
+        console.error('Error saving contact message:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+// update Password
+const update_password = async (req, res) => {
+    const { email, currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (newPassword !== confirmPassword) {
+        return res.status(400).json({ error: 'New passwords do not match' });
+    }
+
+    try {
+        const updatedUser = await updatePassword(email, currentPassword, newPassword);
+
+        if (updatedUser) {
+            res.status(200).json({ message: 'Password updated successfully', updatedUser });
+        } else {
+            res.status(401).json({ error: 'Invalid credentials' });
+        }
+    } catch (err) {
+        console.error('Error updating password:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+}
+
+
+
+module.exports = { register_user, registerUser, login_user, contact_us, update_password }

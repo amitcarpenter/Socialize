@@ -1,6 +1,7 @@
 require("dotenv").config()
 const express = require("express");
 const pool = require('./config/database');
+const axios = require('axios');
 const user_router = require("./src/routes/userRoutes");
 
 
@@ -18,8 +19,6 @@ pool.query('SELECT NOW()', (err, result) => {
         console.log('Connected to the database:', result.rows[0].now);
     }
 });
-
-
 
 
 app.listen(port, () => { console.log(`server is working ${port}`) })
