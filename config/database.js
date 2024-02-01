@@ -1,25 +1,12 @@
 const { Pool } = require('pg');
+require("dotenv").config();
 
-// Configure the PostgreSQL connection
 const pool = new Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'postgres',
-    password: '@Mit@#$1',
-    port: 5432,
+    user: process.env.DATABASE_USER,
+    host: process.env.HOST,
+    database: process.env.DATABASE,
+    password: process.env.DATABASE_PASSWORD,
+    port: process.env.DATABASE_PORT,
 });
-
-
-//   const query = async (text, params) => {
-//     const start = Date.now();
-//     const res = await pool.query(text, params);
-//     const duration = Date.now() - start;
-//     console.log('Executed query:', { text, duration, rows: res.rowCount });
-//     return res;
-//   };
-
-//   module.exports = {
-//     query,
-//   };
 
 module.exports = pool;

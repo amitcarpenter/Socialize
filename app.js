@@ -2,16 +2,16 @@ require("dotenv").config();
 const express = require("express");
 const pool = require("./config/database");
 const axios = require("axios");
+const cors = require('cors');
 const user_router = require("./src/routes/userRoutes");
 const path = require("path");
 
 const SocialPost = require("social-post-api");
-const API_KEY = "RMG9FNY-3QF443H-NY3JNW8-QNGXT7J";
+const API_KEY = process.env.SOCIAL_API_KEY;
 const social = new SocialPost(API_KEY);
 
 const { IgApiClient } = require("instagram-private-api");
 const { get } = require("request-promise");
-// const CronJob = require("cron").CronJob;
 const cron = require("node-cron");
 const { CronJob } = require("cron");
 const moment = require("moment-timezone");
@@ -24,7 +24,9 @@ const upload = multer({ storage: storage });
 const port = process.env.PORT || 3000;
 const app = express();
 
-app.use(user_router);
+// Middle ware
+app.use(cors());
+app.use("/api/", user_router);
 
 // Set EJS as the view engine
 app.set("view engine", "ejs");
@@ -43,62 +45,9 @@ app.listen(port, () => {
     console.log(`server is working ${port}`);
 });
 
-app.get("/", (req, res) => {
-    res.render("index");
-});
 
-// app.post("/schedule-post", async (req, res) => {
-//     try {
-//         let social_media_array = req.body.social_media_array
-//         console.log(social_media_array)
-
-//         let schedule_time = req.body.schedule_time
-//         let image_post = req.body.image_post
-//         let post_content = req.body.post_content
-
-//         const run = async () => {
-//             const post = await social.post({
-//                 post: post_content,
-//                 platforms: social_media_array,
-//                 // platforms: ["twitter", "facebook", "instagram", "linkedin"],
-//                 mediaUrls: image_post
-//             }).catch(console.error);
-//             console.log(post);
-//         };
-
-//         const postToInsta = async () => {
-//             const ig = new IgApiClient();
-//             ig.state.generateDevice(process.env.IG_USERNAME);
-//             await ig.account.login(process.env.IG_USERNAME, process.env.IG_PASSWORD);
-
-//             const imageBuffer = await get({
-//                 url: image_post,
-//                 encoding: null,
-//             });
-//             const caption = post_content;
-//             const media = await ig.publish.photo({
-//                 file: imageBuffer,
-//                 caption: caption
-//             });
-//             console.log("Media ID:", media.id);
-//         }
-
-//         await run();
-//         if (social_media_array.includes("instagram")) {
-//             console.log("function Call insta")
-//             await postToInsta();
-//         }
-
-//         res.status(200).json({ message: "sucesss" })
-
-//     } catch (error) {
-//         console.log(error)
-//     }
-// })
-
-
-
-app.post("/schedule-post", async (req, res) => {
+// Schedule Post
+app.post("/api/schedule-post", async (req, res) => {
     try {
         let social_media_array = req.body.social_media_array;
         let image_post = req.body.image_post;
@@ -179,8 +128,8 @@ app.post("/schedule-post", async (req, res) => {
 });
 
 
-
-app.get("/get-scheduled-posts", async (req, res) => {
+// get data from the schedule post 
+app.get("/api/get-scheduled-posts", async (req, res) => {
     try {
         // Fetch all data from the scheduled_posts table
         const query = "SELECT * FROM scheduled_posts";
@@ -194,8 +143,8 @@ app.get("/get-scheduled-posts", async (req, res) => {
     }
 });
 
-
-app.put("/edit-scheduled-post/:id", async (req, res) => {
+// edit schedule post
+app.put("/api/edit-scheduled-post/:id", async (req, res) => {
     try {
         const postId = req.params.id;
         const { social_media_array, schedule_time, image_post, post_content } = req.body;
@@ -217,7 +166,8 @@ app.put("/edit-scheduled-post/:id", async (req, res) => {
     }
 });
 
-app.delete("/delete-scheduled-post/:id", async (req, res) => {
+// delete schedule post
+app.delete("/api/delete-scheduled-post/:id", async (req, res) => {
     try {
         const postId = req.params.id;
 
@@ -237,8 +187,8 @@ app.delete("/delete-scheduled-post/:id", async (req, res) => {
     }
 });
 
-
-app.post("/add-linkedin-data/:id", async (req, res) => {
+// add linkedin data
+app.post("/api/add-linkedin-data/:id", async (req, res) => {
     try {
         const userId = req.params.id;
         const { email, password } = req.body;
@@ -261,7 +211,7 @@ app.post("/add-linkedin-data/:id", async (req, res) => {
 });
 
 // Twitter Data API
-app.post("/add-twitter-data/:id", async (req, res) => {
+app.post("/api/add-twitter-data/:id", async (req, res) => {
     try {
         const userId = req.params.id;
         const { username, password } = req.body;
@@ -281,7 +231,7 @@ app.post("/add-twitter-data/:id", async (req, res) => {
 });
 
 // Instagram Data API
-app.post("/add-instagram-data/:id", async (req, res) => {
+app.post("/api/add-instagram-data/:id", async (req, res) => {
     try {
         const userId = req.params.id;
         const { username, password } = req.body;
@@ -301,7 +251,7 @@ app.post("/add-instagram-data/:id", async (req, res) => {
 });
 
 // Facebook Data API
-app.post("/add-facebook-data/:id", async (req, res) => {
+app.post("/api/add-facebook-data/:id", async (req, res) => {
     try {
         const userId = req.params.id;
         const { username, password } = req.body;
