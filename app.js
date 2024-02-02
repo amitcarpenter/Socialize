@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-// const pool = require("./config/database");
+const pool = require("./config/database");
 const axios = require("axios");
 const cors = require('cors');
 const user_router = require("./src/routes/userRoutes");
@@ -33,13 +33,13 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "src/views"));
 
 // Test the database connection
-// pool.query("SELECT NOW()", (err, result) => {
-//     if (err) {
-//         console.error("Error connecting to the database:", err);
-//     } else {
-//         console.log("Connected to the database:", result.rows[0].now);
-//     }
-// });
+pool.query("SELECT NOW()", (err, result) => {
+    if (err) {
+        console.error("Error connecting to the database:", err);
+    } else {
+        console.log("Connected to the database:", result.rows[0].now);
+    }
+});
 
 app.listen(port, () => {
     console.log(`server is working ${port}`);
